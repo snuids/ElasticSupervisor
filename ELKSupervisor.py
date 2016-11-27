@@ -47,6 +47,7 @@ def createIndexTemplate():
 
     print "Index template saved."
 
+print "Version v0.1f"
 print "Start %s" % datetime.now().strftime("%Y-%m-%d %H:%M:%S");
 
 Config = ConfigParser.ConfigParser()
