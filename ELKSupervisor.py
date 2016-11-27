@@ -84,8 +84,16 @@ def RefreshStats():
         node['docs']=stats['nodes'][key]['indices']['docs']['count']
         node['deleted']=stats['nodes'][key]['indices']['docs']['deleted']
         node['store_size_in_kbytes']=stats['nodes'][key]['indices']['store']['size_in_bytes']/1000
-        node['cpu_percent']=stats['nodes'][key]['os']['cpu_percent']
-        node['load_average']=stats['nodes'][key]['os']['load_average']
+
+        if('cpu_percent' in stats['nodes'][key]['os']): # Elastic version<5.0
+            node['cpu_percent']=stats['nodes'][key]['os']['cpu_percent']
+            node['load_average']=stats['nodes'][key]['os']['load_average']
+        else:
+            node['cpu_percent']=stats['nodes'][key]['os']['cpu']['percent']
+            node['load_average_1m']=stats['nodes'][key]['os']['cpu']['load_average']['1m']
+            node['load_average_5m']=stats['nodes'][key]['os']['cpu']['load_average']['5m']
+            node['load_average_15m']=stats['nodes'][key]['os']['cpu']['load_average']['15m']
+
         node['mem_total_in_kbytes']=stats['nodes'][key]['os']['mem']['total_in_bytes']/1000
         node['jvm_mem_heap_used_percent']=stats['nodes'][key]['jvm']['mem']['heap_used_percent']
         node['jvm_mem_heap_max_in_kbytes']=stats['nodes'][key]['jvm']['mem']['heap_max_in_bytes']/1000
@@ -99,9 +107,9 @@ def RefreshStats():
     es.bulk(body=bulk_body)
     print "Bulk gone."
 
-    print bulk_body
     time.sleep(float(period))
 
 createIndexTemplate()
-for i in range(0,1):
+#for i in range(0,1):
+while True:
     RefreshStats()
