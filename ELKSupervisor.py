@@ -113,14 +113,14 @@ def updateIndicesStats():
 
         bulk_body=""
 
-        for i in range(0,len(template_list)):
-            bulk_body += '{ "index" : { "_index" : "%s-%s", "_type" : "indice"} }\n' %(indice,datetime.now().strftime("%Y.%m.%d"))
-            template_list[i]['name']=template_list[i]['name'].replace('*','');
-            bulk_body += json.dumps(template_list[i])+'\n'
+    for i in range(0,len(template_list)):
+        bulk_body += '{ "index" : { "_index" : "%s-%s", "_type" : "indice"} }\n' %(indice,datetime.now().strftime("%Y.%m.%d"))
+        template_list[i]['name']=template_list[i]['name'].replace('*','');
+        bulk_body += json.dumps(template_list[i])+'\n'
 
-        print "Bulk ready."
-        es.bulk(body=bulk_body)
-        print "Bulk gone."
+    print "Bulk ready."
+    es.bulk(body=bulk_body)
+    print "Bulk gone."
 
 
 def RefreshStats():
@@ -136,7 +136,7 @@ def RefreshStats():
     health['@timestamp']=int(time.time())*1000
     bulk_body += json.dumps(health)+'\n'
 
-    print json.dumps(stats);
+#    print json.dumps(stats);
 
     for key in stats['nodes']:
         node={}
