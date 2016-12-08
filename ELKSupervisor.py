@@ -1,5 +1,6 @@
 import time
 import ConfigParser
+import re
 import os
 import json
 import requests
@@ -28,6 +29,7 @@ def GetVariable(vari):
         print '%s Environment variable not set.' %(vari)
     return res
 
+
 def createIndexTemplate():
     print "Create index template via a post request."
     global indice,es
@@ -38,12 +40,13 @@ def createIndexTemplate():
                 {"properties":{"cluster_name":{"index":"not_analyzed","type":"string"},"node":{"index":"not_analyzed","type":"string"},"@timestamp":{"format":"strict_date_optional_time||epoch_millis","type":"date"}}}
                 ,"health":
                 {"properties":{"cluster_name":{"index":"not_analyzed","type":"string"},"node":{"index":"not_analyzed","type":"string"},"@timestamp":{"format":"strict_date_optional_time||epoch_millis","type":"date"}}}
+                ,"indice":
+                {"properties":{"name":{"index":"not_analyzed","type":"string"}}}
                 ,"aliases":{}}}
 
     address="http://"+elastic_address+"/_template/elksupervisor";
 
     r = requests.post(address, data=json.dumps(body))
-    print(r.status_code, r.reason)
 
     print "Index template saved."
 
@@ -63,6 +66,62 @@ period=GetVariable('PERIOD');
 print "PERIOD for statistics:%s" %(period)
 
 es = Elasticsearch(hosts=[elastic_address])
+template_list=[]
+
+def updateIndicesStats():
+    global template_list
+
+    template_list=[]
+
+    address="http://"+elastic_address+"/_template";
+
+    r = requests.get(address)
+    templates=json.loads(r.text)
+
+    for key in templates:
+        template={};
+        template['name']=templates[key]['template'];
+        template['docs']=0;
+        template['size']=0;
+        template['@timestamp']=int(time.time())*1000
+
+        template_list.append(template)
+
+
+    address="http://"+elastic_address+"/_stats";
+
+    r = requests.get(address)
+    indices=json.loads(r.text)
+    for key in indices['indices']:
+        found=False
+
+        for i in range(0,len(template_list)):
+            searchObj = re.search( template_list[i]['name'], key, re.M|re.I)
+            if(searchObj):
+                found=True;
+                template_list[i]['docs']+=indices['indices'][key]['total']['docs']['count']
+                break;
+
+        if(not found):
+            template={};
+            template['name']=key;
+            template['docs']=indices['indices'][key]['total']['docs']['count'];
+            template['size']=indices['indices'][key]['total']['store']['size_in_bytes'];
+            template['@timestamp']=int(time.time())*1000
+
+            template_list.append(template)
+
+        bulk_body=""
+
+        for i in range(0,len(template_list)):
+            bulk_body += '{ "index" : { "_index" : "%s-%s", "_type" : "indice"} }\n' %(indice,datetime.now().strftime("%Y.%m.%d"))
+            template_list[i]['name']=template_list[i]['name'].replace('*','');
+            bulk_body += json.dumps(template_list[i])+'\n'
+
+        print "Bulk ready."
+        es.bulk(body=bulk_body)
+        print "Bulk gone."
+
 
 def RefreshStats():
     print "Refreshing stats."
@@ -77,6 +136,7 @@ def RefreshStats():
     health['@timestamp']=int(time.time())*1000
     bulk_body += json.dumps(health)+'\n'
 
+    print json.dumps(stats);
 
     for key in stats['nodes']:
         node={}
@@ -111,6 +171,7 @@ def RefreshStats():
     time.sleep(float(period))
 
 createIndexTemplate()
-#for i in range(0,1):
+
 while True:
+    updateIndicesStats()
     RefreshStats()
