@@ -99,6 +99,7 @@ def updateIndicesStats():
             searchObj = re.search( template_list[i]['name'], key, re.M|re.I)
             if(searchObj):
                 found=True;
+                template_list[i]['size']+=indices['indices'][key]['total']['store']['size_in_bytes'];
                 template_list[i]['docs']+=indices['indices'][key]['total']['docs']['count']
                 break;
 
@@ -106,6 +107,7 @@ def updateIndicesStats():
             template={};
             template['name']=key;
             template['docs']=indices['indices'][key]['total']['docs']['count'];
+#            print indices['indices'][key]['total']['store']
             template['size']=indices['indices'][key]['total']['store']['size_in_bytes'];
             template['@timestamp']=int(time.time())*1000
 
@@ -120,12 +122,13 @@ def updateIndicesStats():
         template_list[i]['name']=template_list[i]['name'].replace('*','');
         bulk_body += json.dumps(template_list[i])+'\n'
 
+#    print bulk_body
     print "Bulk ready."
     es.bulk(body=bulk_body)
     print "Bulk gone."
 
 
-def RefreshStats():
+def refreshStats():
     print "Refreshing stats."
 
     global indice,es,period
@@ -176,4 +179,4 @@ createIndexTemplate()
 
 while True:
     updateIndicesStats()
-    RefreshStats()
+    refreshStats()
