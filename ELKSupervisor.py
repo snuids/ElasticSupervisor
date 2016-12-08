@@ -111,7 +111,9 @@ def updateIndicesStats():
 
             template_list.append(template)
 
-        bulk_body=""
+    bulk_body=""
+
+    print "LEN=%d" %(len(template_list))
 
     for i in range(0,len(template_list)):
         bulk_body += '{ "index" : { "_index" : "%s-%s", "_type" : "indice"} }\n' %(indice,datetime.now().strftime("%Y.%m.%d"))
