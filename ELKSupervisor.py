@@ -170,7 +170,7 @@ def refreshStats():
         bulk_body += json.dumps(node)+'\n'
 
     print "Bulk ready."
-    es.bulk(body=bulk_body)
+    es.bulk(body=bulk_body,timeout='1m')
     print "Bulk gone."
 
     time.sleep(float(period))
