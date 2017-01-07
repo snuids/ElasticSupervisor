@@ -1,7 +1,7 @@
 # ElasticSupervisor
 An Elastic Search health statistics generator.
 
-The application polls the cluster and nodes health and store the results in an configurable index.
+The application polls the cluster and nodes health and stores the results in an configurable index.
 
 Environment variables:
 
