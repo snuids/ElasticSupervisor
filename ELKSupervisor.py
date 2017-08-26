@@ -96,7 +96,8 @@ def updateIndicesStats():
         found=False
 
         for i in range(0,len(template_list)):
-            searchObj = re.search( template_list[i]['name'], key, re.M|re.I)
+            template_pattern = template_list[i]['name'] if template_list[i]['name'] != '*' else '.*'
+            searchObj = re.search( template_pattern, key, re.M|re.I)
             if(searchObj):
                 found=True;
                 template_list[i]['size']+=indices['indices'][key]['total']['store']['size_in_bytes'];
